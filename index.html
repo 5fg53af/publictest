@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copy LMAO to Clipboard</title>
+    <script>
+        function copyToClipboard() {
+            // Create a temporary element to hold the text
+            const tempInput = document.createElement('textarea');
+            tempInput.value = "LMAO"; // The text to be copied
+            document.body.appendChild(tempInput);
+            tempInput.select(); // Select the text
+            document.execCommand("copy"); // Copy to clipboard
+            document.body.removeChild(tempInput); // Remove the temporary element
+        }
+
+        window.onload = copyToClipboard; // Call the function when the page loads
+    </script>
+</head>
+<body>
+    <h1>The word "LMAO" has been copied to your clipboard!</h1>
+</body>
+</html>
