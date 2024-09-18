@@ -1,4 +1,4 @@
-apikey=MFOR#FDSfs
+apikey=MFOR
 access_key=RC<WEC3434
 142.143.553.43
 www.lol.com
