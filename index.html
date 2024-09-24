@@ -2,45 +2,163 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Button to Execute JS Function</title>
+    <title>Execute script.js on Button Click and Display Console Output</title>
     <style>
-        /* Center the button in the middle of the screen */
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #console-output {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: scroll;
+            white-space: pre-wrap;
+            font-family: Consolas, monospace;
+            margin-top: 20px;
+        }
+        .log {
+            color: #d4d4d4;
+        }
+        .error {
+            color: #f44747;
+        }
+        .warn {
+            color: #ffcc00;
+        }
+        .info {
+            color: #3794ff;
         }
         button {
-            padding: 15px 30px;
+            padding: 10px 20px;
+            margin-right: 10px;
             font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
+    <h1>Console Output</h1>
+    <div>
+        <button id="run-script-btn">lol</button>
+        <button id="get-oob-btn">get oob</button>
+    </div>
+    <div id="console-output"></div>
 
-    <!-- Button that triggers the JavaScript function poc(a) -->
-    <button id="runPoc">Run poc(a)</button>
-
-    <!-- Linking the external JavaScript file -->
-    <script src="test.js"></script>
-
+    <!-- Script to capture console output -->
     <script>
-        // Event listener to execute poc(a) when button is pressed
-        document.getElementById("runPoc").addEventListener("click", function() {
-            // Example value of a, you can change this value or get it dynamically
-            const a = 69;
+        (function() {
+            const consoleOutput = document.getElementById('console-output');
 
-            // Check if poc function is defined in test.js
-            if (typeof poc === "function") {
-                poc(a); // Execute poc(a) from test.js
+            // Save original console methods
+            const originalConsole = {
+                log: console.log,
+                error: console.error,
+                warn: console.warn,
+                info: console.info
+            };
+
+            // Helper function to append messages to the DOM
+            function appendMessage(message, type) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add(type);
+                messageElement.textContent = message;
+                consoleOutput.appendChild(messageElement);
+                // Auto-scroll to the bottom
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            }
+
+            // Override console methods
+            console.log = function(...args) {
+                originalConsole.log.apply(console, args);
+                appendMessage(args.join(' '), 'log');
+            };
+
+            console.error = function(...args) {
+                originalConsole.error.apply(console, args);
+                appendMessage(args.join(' '), 'error');
+            };
+
+            console.warn = function(...args) {
+                originalConsole.warn.apply(console, args);
+                appendMessage(args.join(' '), 'warn');
+            };
+
+            console.info = function(...args) {
+                originalConsole.info.apply(console, args);
+                appendMessage(args.join(' '), 'info');
+            };
+        })();
+    </script>
+
+    <!-- Buttons functionality -->
+    <script>
+        // Function to dynamically load script.js
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                if (document.querySelector(`script[src="${url}"]`)) {
+                    console.warn(`Script "${url}" is already loaded.`);
+                    resolve();
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = () => {
+                    console.log(`Script "${url}" loaded successfully.`);
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.error(`Failed to load script "${url}".`);
+                    reject(new Error(`Failed to load script ${url}`));
+                };
+                document.body.appendChild(script);
+            });
+        }
+
+        // Function to spam oob_array
+        function spamOobArray(duration) {
+            const endTime = Date.now() + duration;
+            function spam() {
+                if (Date.now() < endTime) {
+                    if (typeof oob_array !== 'undefined') {
+                        console.log('oob_array:', oob_array);
+                    } else {
+                        console.warn('oob_array is not defined.');
+                    }
+                    // Schedule the next spam as soon as possible
+                    setTimeout(spam, 0);
+                }
+            }
+            spam();
+        }
+
+        // Event listener for "lol" button
+        document.getElementById('run-script-btn').addEventListener('click', async () => {
+            try {
+                await loadScript('test.js');
+                // Immediately print oob_array
+                if (typeof oob_array !== 'undefined') {
+                    console.log('Immediate oob_array:', oob_array);
+                } else {
+                    console.warn('oob_array is not defined after loading script.js.');
+                }
+                // Start spamming oob_array for 1 second (1000 milliseconds)
+                spamOobArray(1000);
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // Event listener for "get oob" button
+        document.getElementById('get-oob-btn').addEventListener('click', () => {
+            if (typeof oob_array !== 'undefined') {
+                console.log('Current oob_array:', oob_array);
             } else {
-                console.log('test.js is not loaded or does not contain a poc function.');
+                console.warn('oob_array is not defined. Please run the "lol" button first.');
             }
         });
     </script>
-
 </body>
 </html>
